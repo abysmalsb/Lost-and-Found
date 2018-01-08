@@ -1,5 +1,5 @@
 # Lost-and-Found
-SMS based GPS tracker with Hologram
+SMS based tracker with Hologram
 
 See the full project here:
 <br>
