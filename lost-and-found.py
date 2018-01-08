@@ -3,13 +3,15 @@
 from Hologram.HologramCloud import HologramCloud
 from time import sleep
 import sys
+import time
+import serial
+import pynmea2
 
 __author__ = "Balazs Simon"
 __license__ = "GPL"
 __version__ = "1.0.0"
 __details__ = "https://www.hackster.io/Abysmal/lost-and-found-082ebb"
 
-WAIT_SECONDS = 30.0
 RESPOND_WITH = 'e'
 
 def getCoordinates():
@@ -29,7 +31,19 @@ def gotSMS():
 
 if __name__ == '__main__':
     hologram = HologramCloud(dict(), network='cellular')
+    ser = serial.Serial(
+        port='/dev/serial0',
+        baudrate = 9600,
+            parity=serial.PARITY_NONE,
+            stopbits=serial.STOPBITS_ONE,
+            bytesize=serial.EIGHTBITS,
+            timeout=1
+        )
+    msg = None
     while True:
+        x=ser.readline()
+        if(x[:6] == "$GPGGA"):
+            msg = x
         if not hologram.network.is_connected():
             result = hologram.network.connect()
             if result == False:
@@ -37,8 +51,12 @@ if __name__ == '__main__':
             else:
                 print 'Connected to cell network'
         elif gotSMS():
-            latitude, longitude = getCoordinates()
-            if RESPOND_WITH == 's':
+            if RESPOND_WITH[1] == 'g' and msg is not None:
+                position = pynmea2.parse(msg)
+                latitude, longitude = position.latitude, position.longitude
+            else:
+                latitude, longitude = getCoordinates()
+            if RESPOND_WITH[0] == 's':
                 response = 'GPS coordinates of your bike: https://maps.google.com/maps?q=' + str(latitude) + ',' + str(longitude)
                 topic = 'sms'
             else:
@@ -50,4 +68,3 @@ if __name__ == '__main__':
                 print 'Message sent successfully'
             else:
                 print 'Failed to send message'
-        sleep(WAIT_SECONDS)
