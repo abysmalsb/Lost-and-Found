@@ -39,11 +39,16 @@ if __name__ == '__main__':
             bytesize=serial.EIGHTBITS,
             timeout=1
         )
-    msg = None
+    gpsLatitude = 0.0
+    gpsLongitude = 0.0
     while True:
         x=ser.readline()
-        if(x[:6] == "$GPGGA"):
-            msg = x
+        if x[:6] == "$GPGGA":
+            position = pynmea2.parse(x)
+            print position
+            if position.longitude != 0.0 and position.latitude != 0.0:
+                gpsLatitude = position.latitude
+                gpsLongitude = position.longitude
         if not hologram.network.is_connected():
             result = hologram.network.connect()
             if result == False:
@@ -51,9 +56,8 @@ if __name__ == '__main__':
             else:
                 print 'Connected to cell network'
         elif gotSMS():
-            if RESPOND_WITH[1] == 'g' and msg is not None:
-                position = pynmea2.parse(msg)
-                latitude, longitude = position.latitude, position.longitude
+            if RESPOND_WITH[1] == 'g' and gpsLatitude != 0.0:
+                latitude, longitude = gpsLatitude, gpsLongitude
                 origin = 'GPS'
             else:
                 latitude, longitude = getCoordinates()
