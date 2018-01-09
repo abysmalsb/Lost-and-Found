@@ -54,13 +54,15 @@ if __name__ == '__main__':
             if RESPOND_WITH[1] == 'g' and msg is not None:
                 position = pynmea2.parse(msg)
                 latitude, longitude = position.latitude, position.longitude
+                origin = 'GPS'
             else:
                 latitude, longitude = getCoordinates()
+                origin = 'Cellular'
             if RESPOND_WITH[0] == 's':
-                response = 'GPS coordinates of your bike: https://maps.google.com/maps?q=' + str(latitude) + ',' + str(longitude)
+                response = origin + ' coordinates of your bike: https://maps.google.com/maps?q=' + str(latitude) + ',' + str(longitude)
                 topic = 'sms'
             else:
-                response = '{"latitude":"' + str(latitude) + '","longitude":"' + str(longitude) + '"}'
+                response = '{"latitude":"' + str(latitude) + '","longitude":"' + str(longitude) + '","origin":"'+ origin +'"}'
                 topic = 'email'
             print 'Response: ' + response
             response_code = hologram.sendMessage(response, topic)
